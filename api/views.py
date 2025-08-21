@@ -4,14 +4,16 @@ from rest_framework.response import Response
 from django.db.models import Q
 from django.contrib.auth.models import User
 from .models import Book, Review
-from .serializers import BookSerializer, ReviewSerializer, UserSerializer
+from rest_framework import generics
+from .serializers import BookSerializer, ReviewSerializer, UserSerializer, RegisterSerializer
 
 class BookViewSet(viewsets.ModelViewSet):
     serializer_class = BookSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    queryset = Book.objects.all()
     
     def get_queryset(self):
-        queryset = Book.objects.all()
+        queryset = self.queryset  
         
         # Filter by user if requested
         user_id = self.request.query_params.get('user_id')
@@ -47,9 +49,7 @@ class BookViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    
-    def get_queryset(self):
-        return Review.objects.all()
+    queryset = Review.objects.all()  # Add this line
     
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -57,3 +57,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+class RegisterView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = RegisterSerializer
+    permission_classes = [permissions.AllowAny]
